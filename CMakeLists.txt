@@ -507,6 +507,8 @@ if(BUILD_ONNX_PARSER)
 endif()
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY profiling/client DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY profiling/common DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(ARMCOMPUTENEON OR ARMCOMPUTECL)
     target_link_libraries(armnn PUBLIC ${ARMCOMPUTE_LIBRARIES})
@@ -967,6 +969,17 @@ list(APPEND armnn_export_targets
     armnn
     armnnUtils
 )
+
+if (BUILD_ONNX_PARSER)
+list(APPEND armnn_export_targets
+    armnnOnnxParser
+)
+set_target_properties(armnnOnnxParser
+    PROPERTIES
+    EXPORT_NAME ArmnnOnnxParser
+)
+add_library(Armnn::ArmnnOnnxParser ALIAS armnnOnnxParser)
+endif()
 
 install(
     TARGETS ${armnn_export_targets}

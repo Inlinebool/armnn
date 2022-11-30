@@ -125,6 +125,14 @@ build_armnn()
 
   make -j "$NUM_THREADS"
 
+  cmake --install . --prefix "$ARMNN_INSTALL_TARGET"
+
+  cd "$ARMNN_INSTALL_TARGET"/lib/cmake/armnn
+  local sed_str_acl="s=\/home\/arm-user\/build\/acl\/${TARGET_ARCH}_build=\${_IMPORT_PREFIX}\/lib=g"
+  sed -i ${sed_str_acl} ArmnnTargets.cmake
+  local sed_str_proto="s=\/home\/arm-user\/build\/protobuf\/${TARGET_ARCH}_build=\${_IMPORT_PREFIX}=g"
+  sed -i ${sed_str_proto} ArmnnTargets.cmake
+
   # Copy protobuf library into Arm NN build directory, if ONNX Parser is enabled
   if [ "$flag_onnx_parser" -eq 1 ]; then
     cd "$ARMNN_BUILD_TARGET"
@@ -132,6 +140,20 @@ build_armnn()
     cp "$PROTOBUF_LIBRARY_TARGET" .
     ln -s libprotobuf.so.23.0.0 ./libprotobuf.so.23
     ln -s libprotobuf.so.23.0.0 ./libprotobuf.so
+    cd "$ARMNN_INSTALL_TARGET"/lib
+    rm -f libprotobuf.so libprotobuf.so.23 libprotobuf.so.23.0.0
+    cp "$PROTOBUF_LIBRARY_TARGET" .
+    ln -s libprotobuf.so.23.0.0 ./libprotobuf.so.23
+    ln -s libprotobuf.so.23.0.0 ./libprotobuf.so
+  fi
+
+  if [ "$flag_neon_backend" -eq 1 ] || [ "$flag_cl_backend" -eq 1 ]; then
+    cd "$ARMNN_BUILD_TARGET"
+    rm -f libarm_compute*
+    cp "$ACL_BUILD_TARGET"/libarm_compute* .
+    cd "$ARMNN_INSTALL_TARGET"/lib
+    rm -f libarm_compute_core*
+    cp "$ACL_BUILD_TARGET"/libarm_compute* .
   fi
 
   echo -e "\n***** Built Arm NN for $TARGET_ARCH *****"
@@ -144,6 +166,16 @@ build_armnn()
   tar -czf "$tarball_path" "$ARMNN_BUILD_DIR_NAME"
 
   echo -e "\n***** Created tarball of Arm NN build at $ROOT_DIR/armnn_$ARMNN_BUILD_DIR_NAME.tar.gz *****"
+  echo -e "\n***** To extract tarball, run: tar -xzf armnn_$ARMNN_BUILD_DIR_NAME.tar.gz *****\n"
+
+  local install_tarball_path="$ROOT_DIR/armnn_$ARMNN_INSTALL_DIR_NAME.tar.gz"
+  echo -e "\n***** Creating tarball of Arm NN install at $install_tarball_path *****"
+
+  cd "$ARMNN_BUILD_ROOT"
+  rm -f "$install_tarball_path"
+  tar -czf "$install_tarball_path" "$ARMNN_INSTALL_DIR_NAME"
+
+  echo -e "\n***** Created tarball of Arm NN install at $ROOT_DIR/armnn_$ARMNN_BUILD_DIR_NAME.tar.gz *****"
   echo -e "\n***** To extract tarball, run: tar -xzf armnn_$ARMNN_BUILD_DIR_NAME.tar.gz *****\n"
 
   return 0
@@ -396,21 +428,21 @@ fi
 
 # Download Arm NN and ACL if not done already in a previous execution of this script
 # Check if Arm NN source directory exists AND that it is a repository (not empty)
-if [ -d "$ARMNN_SRC" ] && check_if_repository "$ARMNN_SRC"; then
-  echo -e "\n***** Arm NN source repository already located at $ARMNN_SRC. Skipping cloning of Arm NN. *****"
+# if [ -d "$ARMNN_SRC" ] && check_if_repository "$ARMNN_SRC"; then
+#   echo -e "\n***** Arm NN source repository already located at $ARMNN_SRC. Skipping cloning of Arm NN. *****"
 
-  # ACL repo must also be present if Arm NN repo is present
-  if [ -d "$ACL_SRC" ] && check_if_repository "$ACL_SRC"; then
-    echo -e "\n***** ACL source repository already located at $ACL_SRC. Skipping cloning of ACL. *****"
-  else
-    echo -e "\nERROR: ACL source repository must be provided at $ACL_SRC if Arm NN source is provided. *****"
-    exit 1
-  fi
-else
-  # Download latest release branches of Arm NN and ACL
-  download_armnn
-  download_acl
-fi
+#   # ACL repo must also be present if Arm NN repo is present
+#   if [ -d "$ACL_SRC" ] && check_if_repository "$ACL_SRC"; then
+#     echo -e "\n***** ACL source repository already located at $ACL_SRC. Skipping cloning of ACL. *****"
+#   else
+#     echo -e "\nERROR: ACL source repository must be provided at $ACL_SRC if Arm NN source is provided. *****"
+#     exit 1
+#   fi
+# else
+#   # Download latest release branches of Arm NN and ACL
+#   download_armnn
+#   download_acl
+# fi
 
 # Adjust output build directory names for Arm NN and ACL if debug is enabled
 DEBUG_POSTFIX=""
@@ -421,7 +453,9 @@ fi
 # Directories for Arm NN and ACL build outputs
 ARMNN_BUILD_ROOT="$BUILD_DIR"/armnn
 ARMNN_BUILD_DIR_NAME="$TARGET_ARCH"_build"$DEBUG_POSTFIX"
+ARMNN_INSTALL_DIR_NAME="$TARGET_ARCH"_install"$DEBUG_POSTFIX"
 ARMNN_BUILD_TARGET="$ARMNN_BUILD_ROOT"/"$ARMNN_BUILD_DIR_NAME"
+ARMNN_INSTALL_TARGET="$ARMNN_BUILD_ROOT"/"$ARMNN_INSTALL_DIR_NAME"
 ACL_BUILD_TARGET="$BUILD_DIR"/acl/"$TARGET_ARCH"_build"$DEBUG_POSTFIX"
 
 echo -e "\nINFO: Displaying configuration information before execution of $name"

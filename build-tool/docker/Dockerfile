@@ -11,6 +11,10 @@ FROM ubuntu:${UBUNTU_VERSION} AS build-production
 
 ENV DEBIAN_FRONTEND noninteractive
 
+RUN sed -i "s@http://.*archive.ubuntu.com@http://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+
+RUN sed -i "s@http://.*security.ubuntu.com@http://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+
 # Install basic packages for Docker container (not specific to Arm NN)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -31,6 +35,7 @@ WORKDIR /root
 
 # Install system-wide packages specific to Arm NN
 COPY ./scripts/install-packages.sh .
+COPY ./cmake-3.19.0 /root/cmake-3.19.0
 RUN ./install-packages.sh
 
 # Define user for non-root processes (overwriteable during 'docker build' with --build-arg)
@@ -49,6 +54,9 @@ WORKDIR /home/arm-user
 COPY --chown=arm-user:arm-user ./scripts/validation.sh .
 COPY --chown=arm-user:arm-user ./scripts/common.sh .
 COPY --chown=arm-user:arm-user ./scripts/setup-armnn.sh .
+COPY --chown=arm-user:arm-user ./protobuf-3.12.0 ./source/protobuf-3.12.0
+COPY --chown=arm-user:arm-user ./onnx-1.6.0 ./source/onnx-1.6.0
+COPY --chown=arm-user:arm-user ./gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf ./gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf
 
 # Run setup-armnn.sh: download and install Arm NN dependencies
 ARG SETUP_ARGS=""

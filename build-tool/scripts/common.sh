@@ -17,6 +17,7 @@ set -o errexit  # Catch and propagate non zero exit codes.
 ROOT_DIR=$(pwd)
 SOURCE_DIR="$ROOT_DIR"/source
 BUILD_DIR="$ROOT_DIR"/build
+AARCH32_TOOLCHAIN_DIR="$ROOT_DIR"/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf
 
 # Host architecture e.g. x86_64, aarch64
 HOST_ARCH=$(uname -m)
@@ -37,7 +38,7 @@ if [ "$TARGET_ARCH" == "$HOST_ARCH" ]; then
 fi
 
 AARCH64_COMPILER_FLAGS+="CC=/usr/bin/aarch64-linux-gnu-gcc CXX=/usr/bin/aarch64-linux-gnu-g++ "
-AARCH32_COMPILER_FLAGS+="CC=/usr/bin/arm-linux-gnueabihf-gcc CXX=/usr/bin/arm-linux-gnueabihf-g++ "
+AARCH32_COMPILER_FLAGS+="CC=$AARCH32_TOOLCHAIN_DIR/bin/arm-linux-gnueabihf-gcc CXX=$AARCH32_TOOLCHAIN_DIR/bin/arm-linux-gnueabihf-g++ "
 
 # Flatbuffers
 FLATBUFFERS_VERSION=1.12.0

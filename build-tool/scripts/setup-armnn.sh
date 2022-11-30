@@ -384,7 +384,7 @@ if [ "$flag_tflite_delegate" -eq 1 ]; then
 fi
 
 if [ "$flag_onnx_parser" -eq 1 ]; then
-  download_protobuf
+  # download_protobuf
 
   # Host build
   build_protobuf 1
@@ -394,7 +394,7 @@ if [ "$flag_onnx_parser" -eq 1 ]; then
     build_protobuf 0
   fi
 
-  download_onnx
+  # download_onnx
   generate_onnx_sources
 fi
 

@@ -53,7 +53,7 @@ install_cmake()
 
   echo -e "\n***** Building CMake $CMAKE_VERSION ***** "
   "$CMAKE_SRC"/bootstrap
-  make
+  make -j "$NUM_THREADS"
   make install -j "$NUM_THREADS"
 
   if [[ "$(cmake --version 2> /dev/null | grep "$CMAKE_VERSION" )" == *"$CMAKE_VERSION"* ]]; then
@@ -80,11 +80,11 @@ install_apt_packages()
       wget
 
   # Install cross compile toolchains if host is x86_64
-  if [ "$HOST_ARCH" == "x86_64" ]; then
-    apt-get update && apt-get install -y --no-install-recommends  \
-        crossbuild-essential-arm64 \
-        crossbuild-essential-armhf
-  fi
+  # if [ "$HOST_ARCH" == "x86_64" ]; then
+  #   apt-get update && apt-get install -y --no-install-recommends  \
+  #       crossbuild-essential-arm64 \
+  #       crossbuild-essential-armhf
+  # fi
 
   apt-get clean
   rm -rf /var/lib/apt/lists/*
@@ -110,7 +110,7 @@ install_apt_packages
 if [[ "$(cmake --version 2> /dev/null | grep "$CMAKE_VERSION" )" == *"$CMAKE_VERSION"* ]]; then
   echo -e "\n***** CMake $CMAKE_VERSION already installed, skipping CMake install *****"
 else
-  download_cmake
+  # download_cmake
   install_cmake
 fi
 
